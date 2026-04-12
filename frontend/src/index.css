@@ -1,0 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+a {
+  color: inherit;
+}

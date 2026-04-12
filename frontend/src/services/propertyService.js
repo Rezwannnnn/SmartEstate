@@ -1,0 +1,7 @@
+import apiClient from "./apiClient";
+
+export const getAllProperties = (params = {}) =>
+  apiClient.get("/api/properties", { params });
+
+export const getPropertyById = (id) =>
+  apiClient.get(`/api/properties/${id}`);
