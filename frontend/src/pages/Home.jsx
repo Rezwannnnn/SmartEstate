@@ -169,11 +169,13 @@ function SearchCard({ onSearch }) {
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
   const [priceStr, setPriceStr] = useState("");
+  const [bedrooms, setBedrooms] = useState("");
 
   const handleSearch = () => {
     const filters = {};
     if (location) filters.location = location;
     if (type) filters.type = type;
+    if (bedrooms) filters.bedrooms = bedrooms;
     if (priceStr.includes("-")) {
       const parts = priceStr.split("-");
       filters.min_price = Number(parts[0].trim());
@@ -218,6 +220,21 @@ function SearchCard({ onSearch }) {
             <option value="Apartment">Apartment</option>
             <option value="Villa">Villa</option>
             <option value="Commercial">Commercial</option>
+          </select>
+          <IconChevron />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 500, color: "#9ca3af", marginBottom: 6, letterSpacing: "0.04em" }}>Bedrooms</p>
+        <div style={{ display: "flex", alignItems: "center", height: 44, padding: "0 12px", border: "1px solid #e2e8f0", borderRadius: 30, background: "#ffffff", overflow: "hidden" }}>
+          <span style={{ color: "#374151", display: "flex", marginRight: 8 }}>🛏</span>
+          <select value={bedrooms} onChange={e => setBedrooms(e.target.value)} style={{ flex: 1, border: "none", outline: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "#374151", background: "transparent", cursor: "pointer", appearance: "none" }}>
+            <option value="">Any Bedrooms</option>
+            <option value="1">1 Bedroom</option>
+            <option value="2">2 Bedrooms</option>
+            <option value="3">3 Bedrooms</option>
+            <option value="4">4+ Bedrooms</option>
           </select>
           <IconChevron />
         </div>

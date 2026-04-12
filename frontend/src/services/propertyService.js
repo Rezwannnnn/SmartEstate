@@ -39,6 +39,7 @@ export const filterProperties = async (filters = {}) => {
     if (filters.type) results = results.filter(p => p.type.toLowerCase() === filters.type.toLowerCase());
     if (filters.min_price !== undefined) results = results.filter(p => p.price >= filters.min_price);
     if (filters.max_price !== undefined) results = results.filter(p => p.price <= filters.max_price);
+    if (filters.bedrooms) results = results.filter(p => p.bedrooms === Number(filters.bedrooms));
 
     return { data: { success: true, count: results.length, properties: results } };
 };
