@@ -56,9 +56,45 @@ const propertySchema = new mongoose.Schema(
       },
     },
     location: {
-      type: String,
-      required: true,
-      trim: true,
+      address: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      area: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      city: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      postCode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      coordinates: {
+        lat: {
+          type: Number,
+          required: true,
+        },
+        lng: {
+          type: Number,
+          required: true,
+        },
+      },
+      placeId: {
+        type: String,
+        default: "",
+      },
+      formattedAddress: {
+        type: String,
+        required: true,
+        trim: true,
+      },
     },
     status: {
       type: String,
@@ -66,7 +102,7 @@ const propertySchema = new mongoose.Schema(
       default: "Available",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Property", propertySchema);

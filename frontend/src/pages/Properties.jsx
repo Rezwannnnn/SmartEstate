@@ -2,36 +2,148 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { getAllProperties } from "../services/propertyService";
 
+const EARTH_RADIUS_KM = 6371;
+
+function toNumber(value) {
+  const number = Number(value?.toString().replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const toRadians = (deg) => (deg * Math.PI) / 180;
+  const dLat = toRadians(lat2 - lat1);
+  const dLng = toRadians(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_KM * c;
+}
+
+async function geocodeLocation(location) {
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  if (!location || !apiKey) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        location,
+      )}&key=${apiKey}`,
+    );
+    const data = await response.json();
+
+    if (data.status !== "OK" || !data.results?.length) {
+      return null;
+    }
+
+    const result = data.results[0];
+    return {
+      lat: result.geometry.location.lat,
+      lng: result.geometry.location.lng,
+      formattedAddress: result.formatted_address,
+    };
+  } catch (error) {
+    console.error("Geocoding failed:", error);
+    return null;
+  }
+}
+
 function Properties() {
   const [searchParams] = useSearchParams();
-  const listing = searchParams.get("listing");
+  const rawListing = searchParams.get("listing");
+  const listing = rawListing === "buy" ? "sale" : rawListing;
+  const locationQuery = searchParams.get("location") || "";
+  const minPrice = toNumber(searchParams.get("minPrice"));
+  const maxPrice = toNumber(searchParams.get("maxPrice"));
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchSummary, setSearchSummary] = useState("");
 
   useEffect(() => {
     const fetchProperties = async () => {
+      setLoading(true);
+      setSearchSummary("");
+
       try {
         const params = {};
         if (listing === "rent") params.listing = "rent";
         if (listing === "sale") params.listing = "sale";
 
         const res = await getAllProperties(params);
-        setProperties(res.data);
+        let results = res.data || [];
+
+        if (minPrice !== undefined) {
+          results = results.filter(
+            (property) => Number(property.price) >= minPrice,
+          );
+        }
+        if (maxPrice !== undefined) {
+          results = results.filter(
+            (property) => Number(property.price) <= maxPrice,
+          );
+        }
+
+        if (locationQuery) {
+          const geo = await geocodeLocation(locationQuery);
+          if (geo) {
+            setSearchSummary(
+              `Showing properties near "${geo.formattedAddress}" within 20 km`,
+            );
+            results = results.filter((property) => {
+              const coords = property.location?.coordinates;
+              if (!coords?.lat || !coords?.lng) {
+                return false;
+              }
+
+              const distance = haversineDistance(
+                geo.lat,
+                geo.lng,
+                Number(coords.lat),
+                Number(coords.lng),
+              );
+              return distance <= 20;
+            });
+          } else {
+            setSearchSummary(
+              `Could not resolve location "${locationQuery}". Please try a different address.`,
+            );
+            results = [];
+          }
+        }
+
+        setProperties(results);
       } catch (error) {
         console.error("Failed to fetch properties:", error);
+        setProperties([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProperties();
-  }, [listing]);
+  }, [listing, locationQuery, minPrice, maxPrice]);
 
   return (
     <main style={{ padding: "100px 40px 40px" }}>
-      <h1 style={{ marginBottom: 24 }}>
-        {listing === "rent" ? "Rental Properties" : "Available Properties"}
+      <h1 style={{ marginBottom: 12 }}>
+        {listing === "rent"
+          ? "Rental Properties"
+          : listing === "sale"
+            ? "Properties for Sale"
+            : "Available Properties"}
       </h1>
+      {locationQuery && (
+        <p style={{ marginTop: 0, color: "#475569" }}>
+          Search location: "{locationQuery}"
+        </p>
+      )}
+      {searchSummary && (
+        <p style={{ marginTop: 8, color: "#6b7280" }}>{searchSummary}</p>
+      )}
 
       {loading ? (
         <p>Loading properties...</p>
@@ -72,10 +184,17 @@ function Properties() {
 
               <div style={{ padding: 18 }}>
                 <h3 style={{ margin: "0 0 8px" }}>{property.title}</h3>
-                <p style={{ margin: "0 0 8px", color: "#475569" }}>{property.location}</p>
-                <p style={{ margin: "0 0 8px", fontWeight: 700 }}>৳ {property.price}</p>
+                <p style={{ margin: "0 0 8px", color: "#475569" }}>
+                  {property.location?.formattedAddress ||
+                    property.location?.address ||
+                    property.location}
+                </p>
+                <p style={{ margin: "0 0 8px", fontWeight: 700 }}>
+                  ৳ {property.price}
+                </p>
                 <p style={{ margin: "0 0 14px", color: "#64748b" }}>
-                  {property.bedrooms} bed • {property.bathrooms} bath • {property.size} sqft
+                  {property.bedrooms} bed • {property.bathrooms} bath •{" "}
+                  {property.size} sqft
                 </p>
 
                 <Link
