@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+// const connectDB = require('./config/db');
 
 
 dotenv.config(); // this loads environment variables 
+const connectDB = require('./config/db');
 
 
 const app = express(); // initializes Express app
@@ -25,6 +26,8 @@ app.get('/', (req, res) => {  // '=>' this is called arrow function
 
 // API routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/properties', require('./routes/propertyRoutes'));
+app.use('/api/requests', require('./routes/requestRoutes'));
 
 // error handling middleware
 app.use((err, req, res, next) => {
