@@ -32,7 +32,7 @@ exports.getFilterProperty = async (req, res) => {
     try {
         const { min_price, max_price, location, type, bedrooms } = req.body;
 
-        // Build query dynamically — only add filters that are actually provided
+    
         const query = {};
 
         if (min_price !== undefined || max_price !== undefined) {
