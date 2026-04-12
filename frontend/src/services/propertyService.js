@@ -31,18 +31,33 @@ const getMockProps = () => {
     return properties;
 };
 
-// MOCK DATA SERVICES (Primary for now as user has no DB)
+// PRIMARY: Call real backend filter route. Fallback to mock if backend is offline.
 export const filterProperties = async (filters = {}) => {
-    let properties = getMockProps();
-    let results = properties;
-    if (filters.location) results = results.filter(p => p.location.toLowerCase() === filters.location.toLowerCase());
-    if (filters.type) results = results.filter(p => p.type.toLowerCase() === filters.type.toLowerCase());
-    if (filters.min_price !== undefined) results = results.filter(p => p.price >= filters.min_price);
-    if (filters.max_price !== undefined) results = results.filter(p => p.price <= filters.max_price);
-    if (filters.bedrooms) results = results.filter(p => p.bedrooms === Number(filters.bedrooms));
+    try {
+        // Build payload matching what propertyController.getFilterProperty expects
+        const payload = {};
+        if (filters.location) payload.location = filters.location;
+        if (filters.type) payload.type = filters.type;
+        if (filters.bedrooms) payload.bedrooms = Number(filters.bedrooms);
+        if (filters.min_price !== undefined) payload.min_price = Number(filters.min_price);
+        if (filters.max_price !== undefined) payload.max_price = Number(filters.max_price);
 
-    return { data: { success: true, count: results.length, properties: results } };
+        const res = await apiClient.post('/api/properties/filter', payload);
+        return res; // { data: { success, count, properties } }
+    } catch (err) {
+        // Backend offline or returned 404 (no results) — fall back to mock
+        console.warn('Backend unavailable, using mock data:', err.message);
+        let properties = getMockProps();
+        let results = properties;
+        if (filters.location) results = results.filter(p => p.location.toLowerCase() === filters.location.toLowerCase());
+        if (filters.type) results = results.filter(p => p.type.toLowerCase() === filters.type.toLowerCase());
+        if (filters.bedrooms) results = results.filter(p => p.bedrooms === Number(filters.bedrooms));
+        if (filters.min_price !== undefined) results = results.filter(p => p.price >= filters.min_price);
+        if (filters.max_price !== undefined) results = results.filter(p => p.price <= filters.max_price);
+        return { data: { success: true, count: results.length, properties: results } };
+    }
 };
+
 
 export const getPropertyById = async (id) => {
     let properties = getMockProps();
