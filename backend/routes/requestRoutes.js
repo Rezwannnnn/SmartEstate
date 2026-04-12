@@ -1,26 +1,14 @@
-<<<<<<< HEAD
 const express = require('express');
-const router = express.Router();
-
-const {
-    sendBuyRequest,
-    getSellerRequests,
-    acceptRequest,
-    rejectRequest
-} = require('../controllers/requestController');
-
-router.post('/buy', sendBuyRequest);
-router.get('/seller/:sellerEmail', getSellerRequests);
-router.put('/:requestId/accept', acceptRequest);
-router.put('/:requestId/reject', rejectRequest);
-
-module.exports = router;
-=======
-const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Request = require("../models/Request");
 const Property = require("../models/Property");
+const {
+  sendBuyRequest,
+  getSellerRequests,
+  acceptRequest: acceptController,
+  rejectRequest: rejectController
+} = require('../controllers/requestController');
 
 const allowedTransitions = {
   Requested: ["Accepted", "Rejected", "Cancelled"],
@@ -28,8 +16,19 @@ const allowedTransitions = {
   Rejected: [],
   Completed: [],
   Cancelled: [],
+  // Fallback for my dashboard's simple 'pending' status
+  pending: ["accepted", "rejected"],
+  accepted: [],
+  rejected: []
 };
 
+// My dashboard endpoints
+router.post('/buy', sendBuyRequest);
+router.get('/seller/:sellerEmail', getSellerRequests);
+router.put('/:requestId/accept', acceptController);
+router.put('/:requestId/reject', rejectController);
+
+// Develop Branch CRUD & State Logic
 router.post("/", async (req, res) => {
   try {
     const { propertyId, requesterName, requesterEmail, offerAmount, message } = req.body;
@@ -39,10 +38,7 @@ router.post("/", async (req, res) => {
     }
 
     const property = await Property.findById(propertyId);
-
-    if (!property) {
-      return res.status(404).json({ message: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ message: "Property not found" });
 
     if (property.status === "Sold" || property.status === "Rented") {
       return res.status(400).json({ message: "This property is no longer available" });
@@ -57,7 +53,6 @@ router.post("/", async (req, res) => {
     });
 
     await newRequest.save();
-
     const populatedRequest = await Request.findById(newRequest._id).populate("propertyId");
     res.status(201).json(populatedRequest);
   } catch (error) {
@@ -67,10 +62,7 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    const requests = await Request.find()
-      .populate("propertyId")
-      .sort({ createdAt: -1 });
-
+    const requests = await Request.find().populate("propertyId").sort({ createdAt: -1 });
     res.status(200).json(requests);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -79,16 +71,9 @@ router.get("/", async (req, res) => {
 
 router.get("/:id", async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid request ID" });
-    }
-
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid request ID" });
     const request = await Request.findById(req.params.id).populate("propertyId");
-
-    if (!request) {
-      return res.status(404).json({ message: "Request not found" });
-    }
-
+    if (!request) return res.status(404).json({ message: "Request not found" });
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -98,38 +83,30 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { status } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid request ID" });
-    }
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid request ID" });
 
     const request = await Request.findById(req.params.id).populate("propertyId");
+    if (!request) return res.status(404).json({ message: "Request not found" });
 
-    if (!request) {
-      return res.status(404).json({ message: "Request not found" });
-    }
-
-    if (!allowedTransitions[request.status].includes(status)) {
-      return res.status(400).json({
-        message: `Invalid status transition from ${request.status} to ${status}`,
-      });
+    const currentStatus = request.status || 'pending';
+    if (!allowedTransitions[currentStatus]?.includes(status)) {
+      return res.status(400).json({ message: `Invalid status transition from ${currentStatus} to ${status}` });
     }
 
     request.status = status;
     await request.save();
 
-    if (status === "Accepted") {
+    if (status === "Accepted" || status === "accepted") {
       request.propertyId.status = "Under Offer";
       await request.propertyId.save();
     }
 
     if (status === "Completed") {
-      request.propertyId.status =
-        request.propertyId.propertyType === "Sale" ? "Sold" : "Rented";
+      request.propertyId.status = request.propertyId.propertyType === "Sale" ? "Sold" : "Rented";
       await request.propertyId.save();
     }
 
-    if (status === "Rejected" || status === "Cancelled") {
+    if (status === "Rejected" || status === "rejected" || status === "Cancelled") {
       if (request.propertyId.status === "Under Offer") {
         request.propertyId.status = "Available";
         await request.propertyId.save();
@@ -145,16 +122,9 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid request ID" });
-    }
-
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ message: "Invalid request ID" });
     const deletedRequest = await Request.findByIdAndDelete(req.params.id);
-
-    if (!deletedRequest) {
-      return res.status(404).json({ message: "Request not found" });
-    }
-
+    if (!deletedRequest) return res.status(404).json({ message: "Request not found" });
     res.status(200).json({ message: "Request deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -162,4 +132,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
->>>>>>> origin/develop

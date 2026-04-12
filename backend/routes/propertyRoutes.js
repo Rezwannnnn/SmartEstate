@@ -1,21 +1,15 @@
-<<<<<<< HEAD
 const express = require('express');
-const router = express.Router();
-
-const { property_input, getFilterProperty } = require('../controllers/propertyController');
-const { getPropertyById } = require('../controllers/requestController');
-
-router.post('/', property_input);
-router.post('/filter', getFilterProperty);
-router.get('/:id', getPropertyById);
-
-module.exports = router;
-=======
-const express = require("express");
 const mongoose = require("mongoose");
 const router = express.Router();
 const Property = require("../models/Property");
+const { property_input, getFilterProperty } = require('../controllers/propertyController');
+const { getPropertyById: getPropByIdReq } = require('../controllers/requestController');
 
+// My endpoints
+router.post('/filter', getFilterProperty);
+router.post('/input', property_input); // Renamed from '/' to avoid clash with develop's GET /
+
+// Develop endpoints
 router.get("/", async (req, res) => {
   try {
     const { listing } = req.query;
@@ -37,7 +31,8 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ message: "Invalid property ID" });
+      // Fallback to my custom controller if not a valid ObjectId (since I used dummy IDs like 'p1')
+      return getPropByIdReq(req, res);
     }
 
     const property = await Property.findById(req.params.id);
@@ -103,4 +98,3 @@ router.delete("/:id", async (req, res) => {
 });
 
 module.exports = router;
->>>>>>> origin/develop
