@@ -1,3 +1,5 @@
+import apiClient from "./apiClient";
+
 const MOCK_PROPERTIES = [
     {
         _id: "p1", title: "Luxury Modern Villa", price: 6500000,
@@ -19,13 +21,19 @@ const MOCK_PROPERTIES = [
     }
 ];
 
-export const filterProperties = async (filters = {}) => {
+// Helper to get local mock data
+const getMockProps = () => {
     let properties = JSON.parse(localStorage.getItem("mock_properties"));
     if (!properties || properties.length === 0) {
         properties = MOCK_PROPERTIES;
         localStorage.setItem("mock_properties", JSON.stringify(properties));
     }
+    return properties;
+};
 
+// MOCK DATA SERVICES (Primary for now as user has no DB)
+export const filterProperties = async (filters = {}) => {
+    let properties = getMockProps();
     let results = properties;
     if (filters.location) results = results.filter(p => p.location.toLowerCase() === filters.location.toLowerCase());
     if (filters.type) results = results.filter(p => p.type.toLowerCase() === filters.type.toLowerCase());
@@ -36,14 +44,17 @@ export const filterProperties = async (filters = {}) => {
 };
 
 export const getPropertyById = async (id) => {
-    let properties = JSON.parse(localStorage.getItem("mock_properties")) || MOCK_PROPERTIES;
+    let properties = getMockProps();
     let prop = properties.find(p => p._id === id);
-    return { data: { success: true, property: prop } };
+    if (prop) return { data: { success: true, property: prop } };
+
+    // Fallback to real API if mock not found
+    return apiClient.get(`/api/properties/${id}`);
 };
 
 export const sendBuyRequest = async (payload) => {
     let requests = JSON.parse(localStorage.getItem("mock_requests")) || [];
-    let properties = JSON.parse(localStorage.getItem("mock_properties")) || MOCK_PROPERTIES;
+    let properties = getMockProps();
     let prop = properties.find(p => p._id === payload.propertyId);
 
     const newReq = {
@@ -69,7 +80,7 @@ export const acceptRequest = async (requestId) => {
     let req = requests.find(r => r._id === requestId);
     if (req) {
         req.status = 'accepted';
-        let properties = JSON.parse(localStorage.getItem("mock_properties")) || MOCK_PROPERTIES;
+        let properties = getMockProps();
         let prop = properties.find(p => p._id === req.property._id);
         if (prop) prop.status = "sold";
         localStorage.setItem("mock_properties", JSON.stringify(properties));
@@ -87,3 +98,10 @@ export const rejectRequest = async (requestId) => {
     }
     return { data: { success: true } };
 };
+
+// REAL API SERVICES (From develop branch)
+export const getAllProperties = (params = {}) =>
+    apiClient.get("/api/properties", { params });
+
+export const createProperty = (payload) =>
+    apiClient.post("/api/properties", payload);

@@ -19,6 +19,7 @@ function Login() {
     setMessage("");
 
     try {
+<<<<<<< HEAD
       if (email && password) {
         localStorage.setItem("token", "dummy-auth-token-1234");
         localStorage.setItem("userEmail", email);
@@ -27,6 +28,15 @@ function Login() {
       navigate("/");
     } catch (err) {
       setMessage("Login failed. Please try again.");
+=======
+      const res = await loginUser({ email, password });
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+      }
+      navigate("/");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Login failed. Please try again.");
+>>>>>>> origin/develop
     } finally {
       setLoading(false);
     }

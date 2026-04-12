@@ -20,11 +20,18 @@ function Register() {
     setMessage("");
 
     try {
+<<<<<<< HEAD
       if (email && password && name) {
         navigate("/login");
       }
     } catch (err) {
       setMessage("Registration failed");
+=======
+      await registerUser({ name, email, password });
+      navigate("/login");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Registration failed");
+>>>>>>> origin/develop
     } finally {
       setLoading(false);
     }

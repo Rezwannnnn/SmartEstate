@@ -1,10 +1,18 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+<<<<<<< HEAD
 const connectDB = require('./config/db');
 
 
 dotenv.config(); // this loads environment variables 
+=======
+// const connectDB = require('./config/db');
+
+
+dotenv.config(); // this loads environment variables 
+const connectDB = require('./config/db');
+>>>>>>> origin/develop
 
 
 const app = express(); // initializes Express app
@@ -38,7 +46,11 @@ app.use((err, req, res, next) => {
 });
 
 // starts the server
+<<<<<<< HEAD
 const PORT = 9429;
+=======
+const PORT = process.env.PORT || 5000;
+>>>>>>> origin/develop
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
