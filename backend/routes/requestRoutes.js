@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const router = express.Router();
 const Request = require("../models/Request");
 const Property = require("../models/Property");
+const { sendRequestStatusEmail } = require('../services/emailService');
 const {
   sendBuyRequest,
   getSellerRequests,
@@ -10,6 +11,7 @@ const {
   rejectRequest: rejectController
 } = require('../controllers/requestController');
 
+// Supports both old and new status naming so merged branches keep working.
 const allowedTransitions = {
   Requested: ["Accepted", "Rejected", "Cancelled"],
   Accepted: ["Completed", "Cancelled"],
@@ -111,6 +113,16 @@ router.put("/:id", async (req, res) => {
         request.propertyId.status = "Available";
         await request.propertyId.save();
       }
+    }
+
+    if (status === "Accepted" || status === "accepted" || status === "Rejected" || status === "rejected") {
+      // Send decision update mail only on accept/reject.
+      await sendRequestStatusEmail({
+        to: request.requesterEmail || request.buyer?.email,
+        requesterName: request.requesterName || request.buyer?.name,
+        status,
+        propertyTitle: request.propertyId?.title,
+      });
     }
 
     const updatedRequest = await Request.findById(req.params.id).populate("propertyId");

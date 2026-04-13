@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getPropertyById, sendBuyRequest } from "../services/propertyService";
 import { createRequest } from "../services/requestService";
+import PropertyLocationMap from "../components/PropertyLocationMap";
 
 export default function PropertyDetails() {
   const { id } = useParams();
@@ -84,6 +85,15 @@ export default function PropertyDetails() {
 
   const isAvailable = !property.status || property.status.toLowerCase() === 'available';
   const displayImage = property.image || (property.images && property.images[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
+  // Prepare clean map props so the map component can handle both new and old data shapes.
+  const hasCoordinates = Number.isFinite(Number(property.location?.coordinates?.lat)) && Number.isFinite(Number(property.location?.coordinates?.lng));
+  const mapCoordinates = hasCoordinates
+    ? {
+        lat: Number(property.location?.coordinates?.lat),
+        lng: Number(property.location?.coordinates?.lng),
+      }
+    : null;
+  const mapAddress = property.location?.formattedAddress || property.location?.address || (typeof property.location === "string" ? property.location : "");
 
   return (
     <main style={{ minHeight: "100vh", fontFamily: "'DM Sans', sans-serif", background: "#f8fafc", padding: "100px 40px 40px" }}>
@@ -99,6 +109,15 @@ export default function PropertyDetails() {
 
             <div style={{ width: "100%", borderRadius: 24, overflow: "hidden", marginBottom: 30, boxShadow: "0 20px 40px rgba(15,23,42,0.06)" }}>
               <img src={displayImage} alt={property.title} style={{ width: "100%", height: 500, objectFit: "cover" }} />
+            </div>
+
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 24, marginBottom: 24 }}>
+              <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 16px 0" }}>Property Location</h2>
+              <PropertyLocationMap
+                coordinates={mapCoordinates}
+                address={mapAddress}
+                title={property.title}
+              />
             </div>
 
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 32, marginBottom: 24 }}>

@@ -1,5 +1,6 @@
 const Request = require('../models/Request');
-const Property = require('../models/Properties');
+const Property = require('../models/Property');
+const { sendRequestStatusEmail } = require('../services/emailService');
 
 exports.getPropertyById = async (req, res) => {
     try {
@@ -61,6 +62,14 @@ exports.acceptRequest = async (req, res) => {
             await prop.save();
         }
 
+        // Notify buyer after seller accepts.
+        await sendRequestStatusEmail({
+            to: request.requesterEmail || request.buyer?.email,
+            requesterName: request.requesterName || request.buyer?.name,
+            status: 'accepted',
+            propertyTitle: request.property?.title,
+        });
+
         return res.status(200).json({ success: true, message: 'Request accepted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -75,6 +84,13 @@ exports.rejectRequest = async (req, res) => {
 
         request.status = 'rejected';
         await request.save();
+
+        // Notify buyer after seller rejects.
+        await sendRequestStatusEmail({
+            to: request.requesterEmail || request.buyer?.email,
+            requesterName: request.requesterName || request.buyer?.name,
+            status: 'rejected',
+        });
 
         return res.status(200).json({ success: true, message: 'Request rejected successfully' });
     } catch (error) {

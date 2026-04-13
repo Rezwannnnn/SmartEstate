@@ -86,12 +86,62 @@ export const sendBuyRequest = async (payload) => {
 };
 
 export const getSellerRequests = async (sellerEmail) => {
+    // Step 1: try seller-specific API.
+    try {
+        const res = await apiClient.get(`/api/requests/seller/${encodeURIComponent(sellerEmail)}`);
+        const hasRequests = Array.isArray(res.data?.requests) && res.data.requests.length > 0;
+        if (res.data?.success && hasRequests) {
+            return res;
+        }
+    } catch (err) {
+        console.warn('Seller-specific endpoint unavailable, trying all requests:', err.message);
+    }
+
+    // Step 2: if empty, get all requests and match seller email here.
+    try {
+        const allRes = await apiClient.get('/api/requests');
+        const allRequests = Array.isArray(allRes.data) ? allRes.data : [];
+        const normalizedSellerEmail = String(sellerEmail || '').toLowerCase();
+        const sellersReqs = allRequests
+            .filter((r) => {
+                const ownerEmail = r.propertyId?.owner?.email || r.property?.owner?.email;
+                const legacySellerEmail = r.seller?.email;
+                // Old data may miss seller email, so keep it visible.
+                if (!ownerEmail && !legacySellerEmail) {
+                    return true;
+                }
+
+                const normalizedOwnerEmail = String(ownerEmail || '').toLowerCase();
+                const normalizedLegacyEmail = String(legacySellerEmail || '').toLowerCase();
+                return normalizedOwnerEmail === normalizedSellerEmail || normalizedLegacyEmail === normalizedSellerEmail;
+            })
+            .map((r) => ({
+                ...r,
+                property: r.property || r.propertyId,
+            }));
+
+        if (sellersReqs.length > 0) {
+            return { data: { success: true, requests: sellersReqs } };
+        }
+    } catch (nestedErr) {
+        console.warn('Backend seller requests unavailable, using mock data:', nestedErr.message);
+    }
+
+    // Step 3: if backend is not usable, use local mock data.
     let requests = JSON.parse(localStorage.getItem("mock_requests")) || [];
-    let sellersReqs = requests.filter(r => r.property.sellerEmail === sellerEmail);
+    let sellersReqs = requests.filter(r => r.property?.sellerEmail === sellerEmail);
     return { data: { success: true, requests: sellersReqs } };
 };
 
 export const acceptRequest = async (requestId) => {
+    // Try backend first so real status update and email can happen.
+    try {
+        return await apiClient.put(`/api/requests/${requestId}`, { status: 'accepted' });
+    } catch (err) {
+        console.warn('Backend accept failed, using mock data:', err.message);
+    }
+
+    // If backend fails, update local mock data.
     let requests = JSON.parse(localStorage.getItem("mock_requests")) || [];
     let req = requests.find(r => r._id === requestId);
     if (req) {
@@ -106,6 +156,14 @@ export const acceptRequest = async (requestId) => {
 };
 
 export const rejectRequest = async (requestId) => {
+    // Try backend first so real status update and email can happen.
+    try {
+        return await apiClient.put(`/api/requests/${requestId}`, { status: 'rejected' });
+    } catch (err) {
+        console.warn('Backend reject failed, using mock data:', err.message);
+    }
+
+    // If backend fails, update local mock data.
     let requests = JSON.parse(localStorage.getItem("mock_requests")) || [];
     let req = requests.find(r => r._id === requestId);
     if (req) {
