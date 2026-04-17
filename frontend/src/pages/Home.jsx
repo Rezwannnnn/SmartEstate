@@ -116,7 +116,7 @@ function Navbar({ scrolled }) {
     <nav style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
       height: 64, display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 60px",
+      padding: "0 30px",
       background: scrolled ? "rgba(248,250,252,0.76)" : "rgba(255,255,255,0.94)",
       backdropFilter: "blur(12px)",
       borderBottom: "1px solid rgba(148,163,184,0.22)",
@@ -279,11 +279,11 @@ function BigPropertyCard({ property }) {
       />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(6,10,24,0.9) 0%, rgba(6,10,24,0.35) 50%, transparent 100%)" }} />
       <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{property.title}</p>
-        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>{property.location}</p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{property.title}</p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>{property.location}</p>
         <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
           {[["🛏", `${property.bedrooms || 3} Beds`], ["🚿", "2 Baths"], ["📐", "1200 sq ft"]].map(([ic, txt]) => (
-            <span key={txt} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+            <span key={txt} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "'DM Sans', sans-serif", fontSize: 1, color: "rgba(255,255,255,0.75)" }}>
               <span>{ic}</span>{txt}
             </span>
           ))}
@@ -291,7 +291,7 @@ function BigPropertyCard({ property }) {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 10 }}>
-            <Link to={`/property/${property._id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, background: "#fff", color: "#0f172a", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer" }}>
+            <Link to={`/property/${property._id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, background: "#fff", color: "#0f172a", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 33, border: "none", cursor: "pointer" }}>
               View Details <span>→</span>
             </Link>
             {property.status && property.status !== 'available' ? (
@@ -309,13 +309,13 @@ function BigPropertyCard({ property }) {
                     alert("Failed to send request: " + (err.response?.data?.message || err.message));
                   }
                 }}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: "#3b82f6", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 8, border: "none", cursor: "pointer" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "#3b82f6", color: "#f5f5f5", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 33, border: "none", cursor: "pointer" }}
               >
                 Request
               </button>
             )}
           </div>
-          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 700, color: "#fff" }}>$ {property.price?.toLocaleString()}</span>
+          <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 700, color: "#fff" }}>$ {property.price?.toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -338,11 +338,11 @@ function SmallPropertyCard({ property }) {
       <div style={{ padding: "14px 16px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
         <div style={{ flex: 1 }}>
           <Link to={`/property/${property._id}`} style={{ textDecoration: "none" }}>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, color: "#0f172a", marginBottom: 3 }}>{property.title}</p>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 600, color: "#0f172a", marginBottom: 4 }}>{property.title}</p>
           </Link>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#94a3b8" }}>{property.location}</p>
-          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 700, color: "#3b82f6", marginTop: 4 }}>$ {property.price?.toLocaleString()}</p>
-          <Link to={`/property/${property._id}`} style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", textDecoration: "none", display: "inline-block", marginTop: 6 }}>View Details →</Link>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: "#94a3b8", marginBottom: 6 }}>{property.location}</p>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 18, fontWeight: 700, color: "#3b82f6", marginBottom: 6 }}>$ {property.price?.toLocaleString()}</p>
+          <Link to={`/property/${property._id}`} style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", border: "1px solid #94a3b8", padding: "8px 16px", borderRadius: 33, cursor: "pointer" , textDecoration: "none", display: "inline-block", marginTop: 6 }}>View Details</Link>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           {property.status && property.status !== 'available' ? (
@@ -360,7 +360,7 @@ function SmallPropertyCard({ property }) {
                   alert("Failed to send request: " + (err.response?.data?.message || err.message));
                 }
               }}
-              style={{ padding: "4px 12px", borderRadius: "16px", border: "none", background: "#3b82f6", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 700 }}
+              style={{ padding: "6px 12px", borderRadius: "16px", border: "none", background: "#3b82f6", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 700, marginTop: "auto" }}
             >
               Request
             </button>
@@ -437,7 +437,7 @@ export default function SmartEstatePage() {
         <Navbar scrolled={scrolled} />
 
         {/* Hero section with background image and the search card */}
-        <section style={{ marginTop: 64, position: "relative", height: 620, overflow: "hidden" }}>
+        <section style={{ marginLeft: 30, marginRight: 30, position: "relative", height: 820, borderRadius: 12, overflow: "hidden" }}>
           <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=85" alt="hero"
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(2,6,23,0.8) 24%, rgba(2,6,23,0.2) 72%)" }} />
@@ -460,8 +460,8 @@ export default function SmartEstatePage() {
         </section>
 
         {/* Featured properties section */}
-        <section ref={featRef} style={{ ...fadeStyle(featVisible), padding: "84px 60px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <section ref={featRef} style={{ ...fadeStyle(featVisible), padding: "84px 30px" }}>
+          <div style={{ maxWidth: 1900, margin: "0 auto" }}>
             <div style={{ textAlign: "right", marginBottom: 40 }}>
               <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#64748b", marginBottom: 10 }}>
                 Editor's Picks
@@ -483,8 +483,8 @@ export default function SmartEstatePage() {
         </section>
 
         {/* How SmartEstate works section */}
-        <section ref={howRef} style={{ ...fadeStyle(howVisible), background: "#ffffff", padding: "76px 60px" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+        <section ref={howRef} style={{ ...fadeStyle(howVisible), background: "#ffffff", padding: "76px 30px" }}>
+          <div style={{ maxWidth: 1900, margin: "0 auto" }}>
             <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#64748b", marginBottom: 10 }}>
               Process
             </p>
@@ -501,13 +501,13 @@ export default function SmartEstatePage() {
         </section>
 
         {/* CTA banner section */}
-        <div ref={ctaRef} style={{ ...fadeStyle(ctaVisible), padding: "72px 60px" }}>
-          <div style={{ background: "linear-gradient(135deg,#0b1324 0%,#131f36 100%)", borderRadius: 24, padding: "72px 48px", textAlign: "center", position: "relative", overflow: "hidden", maxWidth: 1200, margin: "0 auto", border: "1px solid rgba(148,163,184,0.18)", boxShadow: "0 20px 50px rgba(2,6,23,0.35)" }}>
+        <div ref={ctaRef} style={{ ...fadeStyle(ctaVisible), padding: "72px 30px" }}>
+          <div style={{ background: "linear-gradient(135deg,#0b1324 0%,#131f36 100%)", borderRadius: 24, padding: "72px 48px", textAlign: "center", position: "relative", overflow: "hidden", maxWidth: 1900, margin: "0 auto", border: "1px solid rgba(148,163,184,0.18)", boxShadow: "0 20px 50px rgba(2,6,23,0.35)" }}>
             <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at 25% 50%, rgba(59,130,246,0.08), transparent 55%), radial-gradient(ellipse at 75% 50%, rgba(99,102,241,0.07), transparent 55%)", pointerEvents: "none" }} />
-            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1.35, maxWidth: 580, margin: "0 auto 16px", position: "relative" }}>
+            <h2 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 32, fontWeight: 700, color: "#fff", lineHeight: 1.35, maxWidth: 1080, margin: "0 auto 16px", position: "relative" }}>
               Transfer Vision into reality, blending the etheral beauty of the tangible strength of architecture
             </h2>
-            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 420, margin: "0 auto 32px", position: "relative" }}>
+            <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: "rgba(255,255,255,0.45)", lineHeight: 1.7, maxWidth: 620, margin: "0 auto 32px", position: "relative" }}>
               Discover homes for sale or rent, explore locations on the map, and manage your property journey with ease. Discover homes for sale or rent, explore locations on the map, and manage your property journey with ease.
             </p>
             <button
