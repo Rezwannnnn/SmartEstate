@@ -59,6 +59,7 @@ function Properties() {
   const locationQuery = searchParams.get("location") || "";
   const minPrice = toNumber(searchParams.get("minPrice"));
   const maxPrice = toNumber(searchParams.get("maxPrice"));
+  const bedrooms = toNumber(searchParams.get("bedrooms"));
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchSummary, setSearchSummary] = useState("");
@@ -84,6 +85,12 @@ function Properties() {
         if (maxPrice !== undefined) {
           results = results.filter(
             (property) => Number(property.price) <= maxPrice,
+          );
+        }
+
+        if (bedrooms !== undefined) {
+          results = results.filter(
+            (property) => Number(property.bedrooms) === bedrooms,
           );
         }
 
@@ -125,7 +132,7 @@ function Properties() {
     };
 
     fetchProperties();
-  }, [listing, locationQuery, minPrice, maxPrice]);
+  }, [listing, locationQuery, minPrice, maxPrice, bedrooms]);
 
   return (
     <main style={{ padding: "100px 40px 40px" }}>
@@ -143,6 +150,11 @@ function Properties() {
       )}
       {searchSummary && (
         <p style={{ marginTop: 8, color: "#6b7280" }}>{searchSummary}</p>
+      )}
+      {bedrooms !== undefined && (
+        <p style={{ marginTop: 8, color: "#6b7280" }}>
+          Bedroom filter: {bedrooms}
+        </p>
       )}
 
       {loading ? (

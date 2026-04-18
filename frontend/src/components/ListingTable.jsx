@@ -18,7 +18,24 @@ const cellStyle = {
   color: "#334155",
 };
 
-export default function ListingTable({ properties = [], onAddNew }) {
+const getLocationLabel = (location) => {
+  if (!location) return "Unknown location";
+  if (typeof location === "string") return location;
+  return (
+    location.formattedAddress ||
+    location.address ||
+    [location.area, location.city].filter(Boolean).join(", ") ||
+    "Unknown location"
+  );
+};
+
+export default function ListingTable({
+  properties = [],
+  onAddNew,
+  canDelete = false,
+  deletingId = "",
+  onDelete,
+}) {
   return (
     <section
       style={{
@@ -78,9 +95,7 @@ export default function ListingTable({ properties = [], onAddNew }) {
                 <td style={cellStyle}>{property.title}</td>
                 <td style={cellStyle}>{property.propertyType}</td>
                 <td style={cellStyle}>
-                  {property.location?.formattedAddress ||
-                    property.location?.address ||
-                    property.location}
+                  {getLocationLabel(property.location)}
                 </td>
                 <td style={cellStyle}>৳ {property.price?.toLocaleString()}</td>
                 <td style={cellStyle}>{property.status}</td>
@@ -89,24 +104,48 @@ export default function ListingTable({ properties = [], onAddNew }) {
                 <td style={cellStyle}>{property.size} sqft</td>
                 <td style={cellStyle}>{property.owner?.name || "—"}</td>
                 <td style={cellStyle}>
-                  <Link
-                    to={`/properties/${property._id}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      minWidth: 96,
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      background: "#0f172a",
-                      color: "#fff",
-                      textDecoration: "none",
-                      fontSize: 13,
-                      fontWeight: 700,
-                    }}
-                  >
-                    View
-                  </Link>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <Link
+                      to={`/properties/${property._id}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minWidth: 72,
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        background: "#0f172a",
+                        color: "#fff",
+                        textDecoration: "none",
+                        fontSize: 13,
+                        fontWeight: 700,
+                      }}
+                    >
+                      View
+                    </Link>
+
+                    {canDelete && typeof onDelete === "function" ? (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(property._id)}
+                        disabled={deletingId === property._id}
+                        style={{
+                          minWidth: 72,
+                          padding: "10px 12px",
+                          borderRadius: 10,
+                          border: "none",
+                          background: "#dc2626",
+                          color: "#fff",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          cursor: deletingId === property._id ? "default" : "pointer",
+                          opacity: deletingId === property._id ? 0.7 : 1,
+                        }}
+                      >
+                        {deletingId === property._id ? "Deleting" : "Delete"}
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))}

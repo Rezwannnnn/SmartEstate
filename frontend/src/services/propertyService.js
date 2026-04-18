@@ -179,3 +179,17 @@ export const getAllProperties = (params = {}) =>
 
 export const createProperty = (payload) =>
     apiClient.post("/api/properties", payload);
+
+export const deleteProperty = async (propertyId) => {
+    try {
+        return await apiClient.delete(`/api/properties/${propertyId}`);
+    } catch (err) {
+        console.warn('Backend delete failed, using mock data:', err.message);
+    }
+
+    let properties = getMockProps();
+    properties = properties.filter((property) => property._id !== propertyId);
+    localStorage.setItem("mock_properties", JSON.stringify(properties));
+
+    return { data: { success: true } };
+};

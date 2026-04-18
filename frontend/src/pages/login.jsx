@@ -15,14 +15,22 @@ function Login() {
     setMessage("");
 
     try {
-      if (email && password) {
-        localStorage.setItem("token", "dummy-auth-token-1234");
-        localStorage.setItem("userEmail", email);
-        localStorage.setItem("userRole", "seller");
+      const res = await loginUser({ email, password });
+      const token = res.data?.token;
+      const user = res.data?.data;
+
+      if (token && user) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("userEmail", user.email || email);
+        localStorage.setItem("userRole", user.role || "buyer");
+        localStorage.setItem("userName", user.name || "");
+      } else {
+        setMessage("Login succeeded but user data is missing.");
+        return;
       }
       navigate("/");
     } catch (err) {
-      setMessage("Login failed. Please try again.");
+      setMessage(err?.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

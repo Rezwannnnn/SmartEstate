@@ -7,6 +7,7 @@ import Properties from "./pages/Properties";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
 import MyRequests from "./pages/MyRequests";
+import Alerts from "./pages/Alerts";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/property/:id" element={<PropertyDetails />} />
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/alerts" element={<Alerts />} />
         <Route path="/my-requests" element={<MyRequests />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

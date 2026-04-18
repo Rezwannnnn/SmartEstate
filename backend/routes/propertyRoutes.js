@@ -7,7 +7,7 @@ const { getPropertyById: getPropByIdReq } = require('../controllers/requestContr
 
 // My endpoints
 router.post('/filter', getFilterProperty);
-router.post('/input', property_input); // Renamed from '/' to avoid clash with develop's GET /
+router.post('/input', property_input); 
 
 // Develop endpoints
 router.get("/", async (req, res) => {

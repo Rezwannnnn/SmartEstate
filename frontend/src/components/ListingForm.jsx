@@ -4,11 +4,15 @@ import MapPicker from "./MapPicker";
 const propertyTypeOptions = [
   { value: "Sale", label: "Sale" },
   { value: "Rent", label: "Rent" },
+  
+
 ];
 
 const fieldStyle = {
   display: "flex",
+
   flexDirection: "column",
+  
   gap: 8,
   marginBottom: 18,
 };
@@ -20,6 +24,22 @@ const inputStyle = {
   border: "1px solid #cbd5e1",
   background: "#fff",
   fontSize: 14,
+};
+
+const selectStyle = {
+  ...inputStyle,
+  minHeight: 44,
+  paddingRight: 42,
+  appearance: "none",
+  WebkitAppearance: "none",
+  MozAppearance: "none",
+  cursor: "pointer",
+  backgroundImage:
+    "linear-gradient(45deg, transparent 50%, #475569 50%), linear-gradient(135deg, #475569 50%, transparent 50%)",
+  backgroundPosition:
+    "calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px)",
+  backgroundSize: "6px 6px, 6px 6px",
+  backgroundRepeat: "no-repeat",
 };
 
 const labelStyle = {
@@ -35,12 +55,13 @@ export default function ListingForm({
   submitLabel = "Save Listing",
   submitting = false,
 }) {
+  const [uploadedImages, setUploadedImages] = useState([]);
   const [formState, setFormState] = useState({
     title: "",
     description: "",
     images: "",
     price: "",
-    propertyType: "Sale",
+    propertyType: "",
     bedrooms: "1",
     bathrooms: "1",
     size: "0",
@@ -114,6 +135,26 @@ export default function ListingForm({
     }));
   };
 
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Failed to read selected image."));
+      reader.readAsDataURL(file);
+    });
+
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    try {
+      const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
+      setUploadedImages((prev) => [...prev, ...dataUrls]);
+    } catch (uploadError) {
+      setError(uploadError.message || "Failed to process image upload.");
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -135,13 +176,15 @@ export default function ListingForm({
       return;
     }
 
+    const urlImages = formState.images
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
     const payload = {
       title: formState.title,
       description: formState.description,
-      images: formState.images
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
+      images: [...urlImages, ...uploadedImages],
       price: Number(formState.price),
       propertyType: formState.propertyType,
       bedrooms: Number(formState.bedrooms),
@@ -229,7 +272,7 @@ export default function ListingForm({
               id="propertyType"
               value={formState.propertyType}
               onChange={handleChange("propertyType")}
-              style={inputStyle}
+              style={selectStyle}
             >
               {propertyTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -476,7 +519,7 @@ export default function ListingForm({
 
         <div style={fieldStyle}>
           <label style={labelStyle} htmlFor="images">
-            Images
+            Image URLs (optional)
           </label>
           <input
             id="images"
@@ -486,6 +529,25 @@ export default function ListingForm({
             style={inputStyle}
             placeholder="Enter image URLs separated by commas"
           />
+        </div>
+
+        <div style={fieldStyle}>
+          <label style={labelStyle} htmlFor="imageFiles">
+            Upload Images
+          </label>
+          <input
+            id="imageFiles"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            style={inputStyle}
+          />
+          {uploadedImages.length > 0 && (
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+              {uploadedImages.length} image(s) selected.
+            </p>
+          )}
         </div>
 
         {error && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const IconUser = () => (
   <svg
@@ -30,13 +30,18 @@ const IconChevron = () => (
 
 export default function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrollState, setScrollState] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(localStorage.getItem("token")),
   );
+  const [userRole, setUserRole] = useState(
+    (localStorage.getItem("userRole") || "buyer").toLowerCase(),
+  );
 
   useEffect(() => {
     setIsAuthenticated(Boolean(localStorage.getItem("token")));
+    setUserRole((localStorage.getItem("userRole") || "buyer").toLowerCase());
   }, [location]);
 
   useEffect(() => {
@@ -48,20 +53,26 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userName");
     setIsAuthenticated(false);
+    setUserRole("buyer");
+    navigate("/login");
   };
+
+  const canUseDashboard = userRole === "seller" || userRole === "admin";
 
   const links = [
     { key: "home", label: "Home", to: "/" },
-    { key: "buy", label: "Buy", to: "/properties?listing=sale" },
+    { key: "buy", label: "Buy", to: "/properties" },
     { key: "rent", label: "Rent", to: "/properties?listing=rent" },
-    { key: "alerts", label: "Alerts", to: "/dashboard?tab=alerts" },
-    { key: "dashboard", label: "Dashboard", to: "/dashboard" },
+    { key: "alerts", label: "Alerts", to: "/alerts" },
+    ...(canUseDashboard ? [{ key: "dashboard", label: "Dashboard", to: "/dashboard" }] : []),
   ];
 
   const params = new URLSearchParams(location.search);
   const listing = params.get("listing");
-  const tab = params.get("tab");
 
   const isActiveLink = (key) => {
     if (key === "home") return location.pathname === "/";
@@ -69,9 +80,8 @@ export default function Navbar() {
       return location.pathname.startsWith("/properties") && listing !== "rent";
     if (key === "rent")
       return location.pathname.startsWith("/properties") && listing === "rent";
-    if (key === "alerts")
-      return location.pathname === "/dashboard" && tab === "alerts";
-    if (key === "dashboard") return location.pathname === "/dashboard" && !tab;
+    if (key === "alerts") return location.pathname === "/alerts";
+    if (key === "dashboard") return location.pathname === "/dashboard";
     return false;
   };
 

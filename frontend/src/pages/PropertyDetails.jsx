@@ -8,6 +8,7 @@ export default function PropertyDetails() {
   const { id } = useParams();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState("");
   const [requestForm, setRequestForm] = useState({
     requesterName: "",
     requesterEmail: "",
@@ -29,6 +30,22 @@ export default function PropertyDetails() {
     };
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!property) return;
+
+    const imagesFromArray = Array.isArray(property.images)
+      ? property.images.filter(Boolean)
+      : [];
+    const fallbackImage = property.image ? [property.image] : [];
+    const gallery = [...imagesFromArray, ...fallbackImage];
+
+    if (gallery.length > 0) {
+      setSelectedImage(gallery[0]);
+    } else {
+      setSelectedImage("https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop");
+    }
+  }, [property]);
 
   const handleChange = (e) => {
     setRequestForm((prev) => ({
@@ -84,7 +101,14 @@ export default function PropertyDetails() {
   );
 
   const isAvailable = !property.status || property.status.toLowerCase() === 'available';
-  const displayImage = property.image || (property.images && property.images[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
+  const displayImage = selectedImage || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
+  const galleryImages = [
+    ...(Array.isArray(property.images) ? property.images.filter(Boolean) : []),
+    ...(property.image ? [property.image] : []),
+  ];
+  const ownerName = property.owner?.name || property.sellerName || "Not provided";
+  const ownerEmail = property.owner?.email || property.sellerEmail || "Not provided";
+  const ownerPhone = property.owner?.phone || "Not provided";
   // Prepare clean map props so the map component can handle both new and old data shapes.
   const hasCoordinates = Number.isFinite(Number(property.location?.coordinates?.lat)) && Number.isFinite(Number(property.location?.coordinates?.lng));
   const mapCoordinates = hasCoordinates
@@ -110,6 +134,30 @@ export default function PropertyDetails() {
             <div style={{ width: "100%", borderRadius: 24, overflow: "hidden", marginBottom: 30, boxShadow: "0 20px 40px rgba(15,23,42,0.06)" }}>
               <img src={displayImage} alt={property.title} style={{ width: "100%", height: 500, objectFit: "cover" }} />
             </div>
+
+            {galleryImages.length > 1 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 30 }}>
+                {galleryImages.map((img, index) => (
+                  <button
+                    key={`${img}-${index}`}
+                    type="button"
+                    onClick={() => setSelectedImage(img)}
+                    style={{
+                      border: selectedImage === img ? "2px solid #0f172a" : "1px solid #e2e8f0",
+                      borderRadius: 10,
+                      padding: 0,
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      width: 88,
+                      height: 70,
+                      background: "#fff",
+                    }}
+                  >
+                    <img src={img} alt={`Property view ${index + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 20, padding: 24, marginBottom: 24 }}>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 16px 0" }}>Property Location</h2>
@@ -143,6 +191,15 @@ export default function PropertyDetails() {
               <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid #f1f5f9" }}>
                 <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 8 }}>Description</p>
                 <p style={{ color: "#475569", lineHeight: 1.6, margin: 0 }}>{property.description || "No description provided for this luxury property."}</p>
+              </div>
+
+              <div style={{ marginTop: 24, paddingTop: 24, borderTop: "1px solid #f1f5f9" }}>
+                <p style={{ color: "#94a3b8", fontSize: 14, marginBottom: 8 }}>Owner Details</p>
+                <p style={{ color: "#475569", lineHeight: 1.8, margin: 0 }}>
+                  Name: {ownerName}<br />
+                  Email: {ownerEmail}<br />
+                  Phone: {ownerPhone}
+                </p>
               </div>
             </div>
           </section>

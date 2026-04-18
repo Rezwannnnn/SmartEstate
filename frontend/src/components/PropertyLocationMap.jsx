@@ -40,6 +40,7 @@ export default function PropertyLocationMap({ coordinates, address, title }) {
         }
 
         const safeCoordinates = toSafeCoordinates(coordinates);
+
         // If we already have lat/lng, use that directly for best accuracy.
         const map = new google.maps.Map(mapRef.current, {
           center: safeCoordinates || DHAKA_CENTER,
@@ -97,6 +98,7 @@ export default function PropertyLocationMap({ coordinates, address, title }) {
     initMap();
 
     return () => {
+      
       // Prevent state updates if user leaves page while map is loading.
       cancelled = true;
     };
