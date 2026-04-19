@@ -25,6 +25,7 @@ const getTransporter = () => {
   });
 };
 
+
 const sendRequestStatusEmail = async ({
   to,
   requesterName,
@@ -76,7 +77,52 @@ const sendRequestStatusEmail = async ({
     return false;
   }
 };
+const sendNewPropertyEmail = async ({ to, userName, propertyTitle }) => {
+  if (!to || !propertyTitle) return false;
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const subject = `SmartEstate: New Property Match - ${propertyTitle}`;
+  const text = `Hello ${userName || 'User'},\n\nA new property matching your saved filters has just been listed: ${propertyTitle}.\n\nPlease sign in to SmartEstate for more details.\n\nThank you,\nSmartEstate Team`;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error('Email notification failed:', error.message);
+    return false;
+  }
+};
+
+const sendPropertySoldEmail = async ({ to, userName, propertyTitle, status }) => {
+  if (!to || !propertyTitle) return false;
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const subject = `SmartEstate Update: ${propertyTitle} is now ${status}`;
+  const text = `Hello ${userName || 'User'},\n\nA property tracking your saved filters (${propertyTitle}) has just been marked as ${status}. It is no longer available.\n\nPlease check back for more properties.\n\nThank you,\nSmartEstate Team`;
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error('Email notification failed:', error.message);
+    return false;
+  }
+};
 
 module.exports = {
   sendRequestStatusEmail,
+  sendNewPropertyEmail,
+  sendPropertySoldEmail,
 };

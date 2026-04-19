@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllRequests } from "../services/requestService";
-import { getSellerRequests } from "../services/propertyService";
+import { getSellerRequests, getUserNotifications } from "../services/propertyService";
 
 const STATUS_META = {
   pending: {
@@ -39,6 +39,12 @@ const STATUS_META = {
     tone: "#475569",
     bg: "#e2e8f0",
     message: "This request was cancelled.",
+  },
+  sold_alert: {
+    label: "Sold/Rented",
+    tone: "#b91c1c",
+    bg: "#fee2e2",
+    message: "A property you were following was sold/rented.",
   },
 };
 
@@ -90,13 +96,33 @@ export default function Alerts() {
       setError("");
 
       try {
+        let customAlerts = [];
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+            try {
+                const notiRes = await getUserNotifications(userId);
+                const notiData = Array.isArray(notiRes.data) ? notiRes.data : [];
+                customAlerts = notiData.map(n => ({
+                    _id: n._id,
+                    isCustomAlert: true,
+                    createdAt: n.createdAt,
+                    updatedAt: n.createdAt,
+                    message: n.message,
+                    propertyId: n.propertyId,
+                    status: 'sold_alert'
+                }));
+            } catch (e) {
+                console.warn("Failed to get custom alerts", e);
+            }
+        }
+
         if (isSellerView) {
           const res = await getSellerRequests(userEmail);
           const sellerRequests = Array.isArray(res.data?.requests)
             ? res.data.requests
             : [];
 
-          setRequests(sellerRequests);
+          setRequests([...sellerRequests, ...customAlerts]);
         } else {
           const res = await getAllRequests();
           const allRequests = Array.isArray(res.data) ? res.data : [];
@@ -109,7 +135,7 @@ export default function Alerts() {
             return directEmail === userEmail || buyerEmail === userEmail;
           });
 
-          setRequests(mine);
+          setRequests([...mine, ...customAlerts]);
         }
       } catch (networkError) {
         const localRequests = JSON.parse(localStorage.getItem("mock_requests") || "[]");
@@ -220,17 +246,17 @@ export default function Alerts() {
               const propertyId = getRequestPropertyId(request);
               const requesterName = request.requesterName || request.buyer?.name || "Buyer";
 
-              const message = isSellerView
+              const message = request.isCustomAlert ? request.message : (isSellerView
                 ? (normalized === "pending" || normalized === "requested"
                     ? `New buyer request from ${requesterName}. Click to review and accept/reject in dashboard.`
                     : `Request status is ${String(request.status || "pending").toUpperCase()}. Open dashboard for full details.`)
-                : statusMeta.message;
+                : statusMeta.message);
 
-              const cardLink = isSellerView
+              const cardLink = request.isCustomAlert ? (propertyId ? `/properties/${propertyId}` : "/properties") : (isSellerView
                 ? "/dashboard?tab=requests"
                 : propertyId
                   ? `/properties/${propertyId}`
-                  : "/properties";
+                  : "/properties");
 
               const actionLabel = isSellerView ? "Open in Dashboard" : "View Property";
 

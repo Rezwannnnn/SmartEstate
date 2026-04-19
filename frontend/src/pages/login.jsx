@@ -21,6 +21,7 @@ function Login() {
 
       if (token && user) {
         localStorage.setItem("token", token);
+        localStorage.setItem("userId", user.id || user._id);
         localStorage.setItem("userEmail", user.email || email);
         localStorage.setItem("userRole", user.role || "buyer");
         localStorage.setItem("userName", user.name || "");

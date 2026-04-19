@@ -2,12 +2,13 @@ const express = require('express');
 const mongoose = require("mongoose");
 const router = express.Router();
 const Property = require("../models/Property");
-const { property_input, getFilterProperty } = require('../controllers/propertyController');
+const { property_input, getFilterProperty, notify_property } = require('../controllers/propertyController');
 const { getPropertyById: getPropByIdReq } = require('../controllers/requestController');
 
-// My endpoints
+// Rubayet's endpoints
 router.post('/filter', getFilterProperty);
 router.post('/input', property_input); 
+router.post('/savefilters', notify_property);
 
 // Develop endpoints
 router.get("/", async (req, res) => {
@@ -49,7 +50,14 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const newProperty = new Property(req.body);
+    const newProperty = new Property({
+    title: req.body.title,
+    price: req.body.price,
+    location: req.body.location,
+    propertyType: req.body.propertyType,
+    description: req.body.description,
+    images: req.body.images || [],
+    });
     await newProperty.save();
     res.status(201).json(newProperty);
   } catch (error) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { saveFilters } from "../services/propertyService";
 
 const IconChevron = () => (
   <svg
@@ -58,6 +59,29 @@ export default function SearchCard() {
     }
 
     navigate(`/properties?${params.toString()}`);
+  };
+
+  const handleSaveFilters = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      alert("Please log in to save your filters and receive email notifications.");
+      return;
+    }
+
+    const payload = {
+      User: userId,
+      location: location || undefined,
+      type: propertyType !== "all" && propertyType ? propertyType : undefined,
+      min_price: minPrice ? Number(minPrice) : undefined,
+      max_price: maxPrice ? Number(maxPrice) : undefined,
+    };
+
+    try {
+      await saveFilters(payload);
+      alert("Filters saved successfully! You will be notified when new properties match.");
+    } catch (err) {
+      alert("Failed to save filters: " + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
@@ -248,26 +272,46 @@ export default function SearchCard() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleSearch}
-        style={{
-          width: "100%",
-          height: 46,
-          marginTop: 8,
-          background: "#0f172a",
-          color: "#fff",
-          fontFamily: "'DM Sans', sans-serif",
-          fontSize: 14,
-          fontWeight: 600,
-          border: "none",
-          borderRadius: 30,
-          cursor: "pointer",
-          boxShadow: "0 10px 20px rgba(15,23,42,0.28)",
-        }}
-      >
-        Search Properties
-      </button>
+      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+        <button
+          type="button"
+          onClick={handleSearch}
+          style={{
+            flex: 1,
+            height: 46,
+            background: "#0f172a",
+            color: "#fff",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 14,
+            fontWeight: 600,
+            border: "none",
+            borderRadius: 30,
+            cursor: "pointer",
+            boxShadow: "0 10px 20px rgba(15,23,42,0.28)",
+          }}
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          onClick={handleSaveFilters}
+          style={{
+            flex: 1,
+            height: 46,
+            background: "#3b82f6",
+            color: "#fff",
+            fontFamily: "'DM Sans', sans-serif",
+            fontSize: 14,
+            fontWeight: 600,
+            border: "none",
+            borderRadius: 30,
+            cursor: "pointer",
+            boxShadow: "0 10px 20px rgba(59,130,246,0.25)",
+          }}
+        >
+          Save Filters
+        </button>
+      </div>
     </div>
   );
 }

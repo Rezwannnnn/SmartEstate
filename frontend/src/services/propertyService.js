@@ -193,3 +193,9 @@ export const deleteProperty = async (propertyId) => {
 
     return { data: { success: true } };
 };
+
+export const saveFilters = (payload) =>
+    apiClient.post("/api/properties/savefilters", payload);
+
+export const getUserNotifications = (userId) =>
+    apiClient.get(`/api/notifications/${userId}`);

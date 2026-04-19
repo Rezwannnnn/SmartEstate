@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { filterProperties, sendBuyRequest } from "../services/propertyService";
+import { filterProperties, sendBuyRequest, saveFilters } from "../services/propertyService";
 
 // Small inline SVG icons live here so this page feels alive.
 const IconChevron = () => (
@@ -111,6 +111,36 @@ function SearchCard({ onSearch }) {
     if (onSearch) onSearch(filters, true);
   };
 
+  const handleSaveFilters = async () => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      alert("Please log in to save your filters and receive email notifications.");
+      return;
+    }
+
+    const payload = {
+      User: userId,
+      location: location || undefined,
+      type: type || undefined,
+      bedrooms: bedrooms ? Number(bedrooms) : undefined,
+    };
+
+    if (priceStr.includes("-")) {
+      const parts = priceStr.split("-");
+      payload.min_price = Number(parts[0].trim());
+      payload.max_price = Number(parts[1].trim());
+    } else if (priceStr) {
+      payload.max_price = Number(priceStr);
+    }
+
+    try {
+      await saveFilters(payload);
+      alert("Filters saved successfully! You will be notified when new properties match.");
+    } catch (err) {
+      alert("Failed to save filters: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   return (
     <div style={{ background: "linear-gradient(180deg,#ffffff 0%,#f8fafc 100%)", borderRadius: 20, padding: "30px 26px 26px", width: 360, flexShrink: 0, border: "1px solid rgba(148,163,184,0.28)", boxShadow: "0 24px 70px rgba(15,23,42,0.24)" }}>
       <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 20, fontWeight: 700, color: "#0f172a", marginBottom: 4, lineHeight: 1.4 }}>
@@ -180,9 +210,14 @@ function SearchCard({ onSearch }) {
         </div>
       </div>
 
-      <button onClick={handleSearch} style={{ width: "100%", height: 46, marginTop: 8, background: "#0f172a", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, border: "none", borderRadius: 30, cursor: "pointer", boxShadow: "0 10px 20px rgba(15,23,42,0.28)" }}>
-        Search Properties
-      </button>
+      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+        <button onClick={handleSearch} style={{ flex: 1, height: 46, background: "#0f172a", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, border: "none", borderRadius: 30, cursor: "pointer", boxShadow: "0 10px 20px rgba(15,23,42,0.28)" }}>
+          Search
+        </button>
+        <button onClick={handleSaveFilters} style={{ flex: 1, height: 46, background: "#3b82f6", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, border: "none", borderRadius: 30, cursor: "pointer", boxShadow: "0 10px 20px rgba(59,130,246,0.25)" }}>
+          Save Filters
+        </button>
+      </div>
     </div>
   );
 }
