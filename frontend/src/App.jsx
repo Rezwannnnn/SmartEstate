@@ -8,6 +8,8 @@ import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
 import MyRequests from "./pages/MyRequests";
 import Alerts from "./pages/Alerts";
+import EmiCalculator from "./pages/EmiCalculator";
+import EmiCurrencyCalculator from "./pages/EmiCurrencyCalculator";
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
         <Route path="/alerts" element={<Alerts />} />
         <Route path="/my-requests" element={<MyRequests />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/emi-calculator" element={<EmiCalculator />} />
+        <Route path="/emi-calculator-currency" element={<EmiCurrencyCalculator />} />
       </Route>
     </Routes>
   );
