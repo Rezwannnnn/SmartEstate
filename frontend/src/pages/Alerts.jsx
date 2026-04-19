@@ -112,22 +112,8 @@ export default function Alerts() {
           setRequests(mine);
         }
       } catch (networkError) {
-        const localRequests = JSON.parse(localStorage.getItem("mock_requests") || "[]");
-        const mine = localRequests.filter((request) => {
-          const directEmail = String(
-            request.requesterEmail || request.buyer?.email || "",
-          ).toLowerCase();
-
-          if (isSellerView) {
-            const sellerEmail = String(request.property?.sellerEmail || "").toLowerCase();
-            return sellerEmail === userEmail;
-          }
-
-          return directEmail === userEmail;
-        });
-
-        setRequests(mine);
-        setError("Live alerts are unavailable right now. Showing local updates.");
+        setRequests([]);
+        setError(networkError?.response?.data?.message || "Live alerts are unavailable right now.");
       } finally {
         setLoading(false);
       }

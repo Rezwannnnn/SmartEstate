@@ -1,5 +1,5 @@
-const Request = require('../models/Request');
-const Property = require('../models/Property');
+const Request = require('../models/requestModel');
+const Property = require('../models/propertyModel');
 const { sendRequestStatusEmail } = require('../services/emailService');
 
 exports.getPropertyById = async (req, res) => {

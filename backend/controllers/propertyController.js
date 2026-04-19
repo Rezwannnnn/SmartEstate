@@ -1,6 +1,6 @@
 
 
-const Property = require('../models/Property');
+const Property = require('../models/propertyModel');
 
 exports.property_input = async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getPropertyById, sendBuyRequest } from "../services/propertyService";
+import { getPropertyById } from "../services/propertyService";
 import { createRequest } from "../services/requestService";
 import PropertyLocationMap from "../components/PropertyLocationMap";
 
@@ -59,26 +59,13 @@ export default function PropertyDetails() {
     setFeedback("");
 
     try {
-      // Support both the new request service and the mock dashboard pipeline
-      if (id.startsWith('p')) {
-        // FALLBACK FOR MOCK PIPELINE
-        await sendBuyRequest({
-          propertyId: property._id,
-          buyerName: requestForm.requesterName,
-          buyerEmail: requestForm.requesterEmail,
-          buyerPhone: "123456789",
-          message: requestForm.message
-        });
-      } else {
-        // PRODUCTION API
-        await createRequest({
-          propertyId: id,
-          requesterName: requestForm.requesterName,
-          requesterEmail: requestForm.requesterEmail,
-          offerAmount: Number(requestForm.offerAmount),
-          message: requestForm.message,
-        });
-      }
+      await createRequest({
+        propertyId: id,
+        requesterName: requestForm.requesterName,
+        requesterEmail: requestForm.requesterEmail,
+        offerAmount: Number(requestForm.offerAmount),
+        message: requestForm.message,
+      });
 
       setFeedback("Request submitted successfully to the seller dashboard!");
       setRequestForm({ requesterName: "", requesterEmail: "", offerAmount: "", message: "" });

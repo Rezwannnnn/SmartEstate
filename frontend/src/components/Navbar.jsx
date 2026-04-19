@@ -107,7 +107,7 @@ export default function Navbar() {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 60px",
+        padding: "0 30px",
         background: scrollState
           ? "rgba(248,250,252,0.76)"
           : "rgba(255,255,255,0.94)",

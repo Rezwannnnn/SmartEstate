@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require("mongoose");
 const router = express.Router();
-const Property = require("../models/Property");
+const Property = require("../models/propertyModel");
 const { property_input, getFilterProperty } = require('../controllers/propertyController');
 const { getPropertyById: getPropByIdReq } = require('../controllers/requestController');
 

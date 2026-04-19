@@ -1,8 +1,8 @@
 const express = require('express');
 const mongoose = require("mongoose");
 const router = express.Router();
-const Request = require("../models/Request");
-const Property = require("../models/Property");
+const Request = require("../models/requestModel");
+const Property = require("../models/propertyModel");
 const { sendRequestStatusEmail } = require('../services/emailService');
 const {
   sendBuyRequest,
