@@ -5,6 +5,7 @@ const Request = require("../models/requestModel");
 const Property = require("../models/propertyModel");
 const { sendRequestStatusEmail } = require('../services/emailService');
 const { notifySubscribersOnPropertyChange } = require('../services/propertyAlertService');
+const { generateAgreementPdf } = require('../services/agreementPdfService');
 const {
   isFinalPropertyStatus,
   canReceiveNewRequests,
@@ -84,6 +85,72 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/:id/agreement", async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid request ID" });
+    }
+
+    const request = await Request.findById(req.params.id).populate("propertyId");
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    const normalizedStatus = String(request.status || '').toLowerCase();
+    if (normalizedStatus !== 'completed') {
+      return res.status(400).json({ message: 'Agreement can be downloaded only after deal completion' });
+    }
+
+    const property = request.propertyId;
+    if (!property) {
+      return res.status(400).json({ message: "Property information unavailable for this request" });
+    }
+
+    const locationLabel =
+      property.location?.formattedAddress ||
+      property.location?.address ||
+      [property.location?.area, property.location?.city].filter(Boolean).join(', ') ||
+      'N/A';
+
+    const agreementPayload = {
+      agreementId: `SE-${String(request._id).slice(-8).toUpperCase()}`,
+      completedDate: request.updatedAt,
+      property: {
+        title: property.title || 'Property',
+        type: property.propertyType || 'N/A',
+        location: locationLabel,
+        status: property.status || 'N/A',
+        listedPrice: property.price,
+      },
+      buyer: {
+        name: request.buyer?.name || request.requesterName || 'N/A',
+        email: request.buyer?.email || request.requesterEmail || 'N/A',
+        phone: request.buyer?.phone || 'N/A',
+      },
+      seller: {
+        name: request.seller?.name || property.owner?.name || 'N/A',
+        email: request.seller?.email || property.owner?.email || 'N/A',
+        phone: property.owner?.phone || 'N/A',
+      },
+      deal: {
+        offerAmount: request.offerAmount || property.price || 0,
+        finalStatus: property.status || 'N/A',
+        message: request.message || 'No additional notes provided.',
+      },
+    };
+
+    const pdfBuffer = await generateAgreementPdf(agreementPayload);
+    const fileName = `agreement-${request._id}.pdf`;
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    return res.send(pdfBuffer);
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to generate agreement PDF", error: error.message });
   }
 });
 

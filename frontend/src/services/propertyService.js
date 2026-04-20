@@ -58,6 +58,11 @@ export const acceptRequest = (requestId) =>
 export const rejectRequest = (requestId) =>
     apiClient.put(`/api/requests/${requestId}`, { status: 'rejected' });
 
+export const downloadRequestAgreement = (requestId) =>
+    apiClient.get(`/api/requests/${requestId}/agreement`, {
+        responseType: 'blob',
+    });
+
 // REAL API SERVICES (From develop branch)
 export const getAllProperties = (params = {}) =>
     apiClient.get("/api/properties", { params });

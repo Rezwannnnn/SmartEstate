@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { getAllRequests, updateRequestStatus } from "../services/requestService";
+import {
+  getAllRequests,
+  updateRequestStatus,
+  downloadRequestAgreement,
+} from "../services/requestService";
 
 function MyRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState("");
 
   const fetchRequests = async () => {
     try {
@@ -26,6 +31,29 @@ function MyRequests() {
       fetchRequests();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to update request");
+    }
+  };
+
+  const handleDownloadAgreement = async (requestId) => {
+    setDownloadingId(requestId);
+    try {
+      const response = await downloadRequestAgreement(requestId);
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `agreement-${requestId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Agreement is available only after deal completion.",
+      );
+    } finally {
+      setDownloadingId("");
     }
   };
 
@@ -82,6 +110,18 @@ function MyRequests() {
                       Cancel
                     </button>
                   </>
+                )}
+
+                {String(request.status || "").toLowerCase() === "completed" && (
+                  <button
+                    onClick={() => handleDownloadAgreement(request._id)}
+                    disabled={downloadingId === request._id}
+                    style={buttonStyle("#0f172a")}
+                  >
+                    {downloadingId === request._id
+                      ? "Preparing PDF..."
+                      : "Download Agreement"}
+                  </button>
                 )}
               </div>
             </div>

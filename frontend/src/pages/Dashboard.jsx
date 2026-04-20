@@ -10,6 +10,7 @@ import {
   deleteProperty,
   getAllProperties,
   updateProperty,
+  downloadRequestAgreement,
 } from "../services/propertyService";
 
 const getLocationLabel = (location) => {
@@ -118,6 +119,7 @@ export default function Dashboard() {
 
   const [requests, setRequests] = useState([]);
   const [loadingReqs, setLoadingReqs] = useState(false);
+  const [downloadingAgreementId, setDownloadingAgreementId] = useState("");
 
   const totalListingsCount = properties.length;
   const activeRequestsCount = requests.filter((req) => {
@@ -259,6 +261,30 @@ export default function Dashboard() {
       setPropError(err?.response?.data?.message || "Failed to delete property.");
     } finally {
       setDeletingId("");
+    }
+  };
+
+  const handleDownloadAgreement = async (requestId) => {
+    setDownloadingAgreementId(requestId);
+
+    try {
+      const response = await downloadRequestAgreement(requestId);
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `agreement-${requestId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert(
+        err.response?.data?.message ||
+          "Agreement can be downloaded only after deal completion.",
+      );
+    } finally {
+      setDownloadingAgreementId("");
     }
   };
 
@@ -662,6 +688,32 @@ export default function Dashboard() {
                           }}
                         >
                           Reject
+                        </button>
+                      </div>
+                    )}
+
+                    {statusLower === "completed" && (
+                      <div style={{ display: "flex", gap: 10 }}>
+                        <button
+                          onClick={() => handleDownloadAgreement(req._id)}
+                          disabled={downloadingAgreementId === req._id}
+                          style={{
+                            padding: "9px 16px",
+                            background: palette.primary,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            fontWeight: 700,
+                            cursor:
+                              downloadingAgreementId === req._id
+                                ? "not-allowed"
+                                : "pointer",
+                            opacity: downloadingAgreementId === req._id ? 0.75 : 1,
+                          }}
+                        >
+                          {downloadingAgreementId === req._id
+                            ? "Preparing PDF..."
+                            : "Download Agreement"}
                         </button>
                       </div>
                     )}

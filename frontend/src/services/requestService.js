@@ -11,3 +11,8 @@ export const createRequest = (payload) =>
 
 export const updateRequestStatus = (id, payload) =>
   apiClient.put(`/api/requests/${id}`, payload);
+
+export const downloadRequestAgreement = (id) =>
+  apiClient.get(`/api/requests/${id}/agreement`, {
+    responseType: "blob",
+  });
