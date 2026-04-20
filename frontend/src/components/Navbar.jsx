@@ -31,7 +31,9 @@ const IconChevron = () => (
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [scrollState, setScrollState] = useState(false);
+  const [showEmiDropdown, setShowEmiDropdown] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(
     Boolean(localStorage.getItem("token")),
   );
@@ -68,7 +70,10 @@ export default function Navbar() {
     { key: "buy", label: "Buy", to: "/properties" },
     { key: "rent", label: "Rent", to: "/properties?listing=rent" },
     { key: "alerts", label: "Alerts", to: "/alerts" },
-    ...(canUseDashboard ? [{ key: "dashboard", label: "Dashboard", to: "/dashboard" }] : []),
+    { key: "emi", label: "EMI Calculator", to: "#" },
+    ...(canUseDashboard
+      ? [{ key: "dashboard", label: "Dashboard", to: "/dashboard" }]
+      : []),
   ];
 
   const params = new URLSearchParams(location.search);
@@ -81,6 +86,11 @@ export default function Navbar() {
     if (key === "rent")
       return location.pathname.startsWith("/properties") && listing === "rent";
     if (key === "alerts") return location.pathname === "/alerts";
+    if (key === "emi")
+      return (
+        location.pathname === "/emi-calculator" ||
+        location.pathname === "/emi-calculator-currency"
+      );
     if (key === "dashboard") return location.pathname === "/dashboard";
     return false;
   };
@@ -122,19 +132,120 @@ export default function Navbar() {
       >
         SmartEstate
       </Link>
+
       <ul
         style={{
           display: "flex",
           alignItems: "center",
           gap: 28,
           listStyle: "none",
+          margin: 0,
+          padding: 0,
         }}
       >
         {links.map((link) => {
           const isActive = isActiveLink(link.key);
 
+          if (link.key === "emi") {
+            return (
+              <li
+                key={link.key}
+                style={{
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                onMouseEnter={() => setShowEmiDropdown(true)}
+                onMouseLeave={() => setShowEmiDropdown(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowEmiDropdown((prev) => !prev)}
+                  style={{
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 14,
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive ? "#0f172a" : "#64748b",
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    margin: 0,
+                    paddingBottom: 6,
+                    lineHeight: "1",
+                    height: "auto",
+                    borderBottom: isActive
+                      ? "2px solid #0f172a"
+                      : "2px solid transparent",
+                    transition: "all 0.22s ease",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  {link.label}
+                  <IconChevron />
+                </button>
+
+                {showEmiDropdown && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      left: 0,
+                      minWidth: 260,
+                      background: "#fff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                      boxShadow: "0 12px 30px rgba(15,23,42,0.12)",
+                      overflow: "hidden",
+                      zIndex: 100,
+                    }}
+                  >
+                    <Link
+                      to="/emi-calculator"
+                      onClick={() => setShowEmiDropdown(false)}
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        textDecoration: "none",
+                        color: "#0f172a",
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: 14,
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      EMI Calculator
+                    </Link>
+
+                    <Link
+                      to="/emi-calculator-currency"
+                      onClick={() => setShowEmiDropdown(false)}
+                      style={{
+                        display: "block",
+                        padding: "12px 16px",
+                        textDecoration: "none",
+                        color: "#0f172a",
+                        fontFamily: "'DM Sans', sans-serif",
+                        fontSize: 14,
+                      }}
+                    >
+                      EMI Calculator with Currency Conversion
+                    </Link>
+                  </div>
+                )}
+              </li>
+            );
+          }
+
           return (
-            <li key={link.key}>
+            <li
+              key={link.key}
+              style={{
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <Link
                 to={link.to}
                 style={{
@@ -144,10 +255,13 @@ export default function Navbar() {
                   color: isActive ? "#0f172a" : "#64748b",
                   textDecoration: "none",
                   paddingBottom: 6,
+                  lineHeight: "1",
                   borderBottom: isActive
                     ? "2px solid #0f172a"
                     : "2px solid transparent",
                   transition: "all 0.22s ease",
+                  display: "inline-flex",
+                  alignItems: "center",
                 }}
               >
                 {link.label}
@@ -156,6 +270,7 @@ export default function Navbar() {
           );
         })}
       </ul>
+
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button
           style={{
@@ -173,6 +288,7 @@ export default function Navbar() {
         >
           <IconUser />
         </button>
+
         {!isAuthenticated ? (
           <Link
             to="/login"
@@ -185,7 +301,6 @@ export default function Navbar() {
               padding: "9px 22px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.12)",
-              cursor: "pointer",
               textDecoration: "none",
               boxShadow: "0 8px 20px rgba(15,23,42,0.22)",
             }}
