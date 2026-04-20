@@ -1,20 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-const IconUser = () => (
-  <svg
-    width="20"
-    height="20"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.6"
-    viewBox="0 0 24 24"
-  >
-    <circle cx="12" cy="8" r="4" />
-    <path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" />
-  </svg>
-);
-
 const IconChevron = () => (
   <svg
     width="18"
@@ -272,23 +258,6 @@ export default function Navbar() {
       </ul>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            border: "1px solid #e2e8f0",
-            background: "transparent",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            color: "#64748b",
-          }}
-        >
-          <IconUser />
-        </button>
-
         {!isAuthenticated ? (
           <Link
             to="/login"

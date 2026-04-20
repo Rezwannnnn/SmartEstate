@@ -4,6 +4,12 @@ const router = express.Router();
 const Request = require("../models/requestModel");
 const Property = require("../models/propertyModel");
 const { sendRequestStatusEmail } = require('../services/emailService');
+const { notifySubscribersOnPropertyChange } = require('../services/propertyAlertService');
+const {
+  isFinalPropertyStatus,
+  canReceiveNewRequests,
+  cancelPendingRequestsForProperty,
+} = require('../services/requestLifecycleService');
 const {
   sendBuyRequest,
   getSellerRequests,
@@ -11,26 +17,25 @@ const {
   rejectRequest: rejectController
 } = require('../controllers/requestController');
 
-// Supports both old and new status naming so merged branches keep working.
+
 const allowedTransitions = {
   Requested: ["Accepted", "Rejected", "Cancelled"],
   Accepted: ["Completed", "Cancelled"],
   Rejected: [],
   Completed: [],
   Cancelled: [],
-  // Fallback for my dashboard's simple 'pending' status
   pending: ["accepted", "rejected"],
   accepted: [],
   rejected: []
 };
 
-// My dashboard endpoints
+
 router.post('/buy', sendBuyRequest);
 router.get('/seller/:sellerEmail', getSellerRequests);
 router.put('/:requestId/accept', acceptController);
 router.put('/:requestId/reject', rejectController);
 
-// Develop Branch CRUD & State Logic
+
 router.post("/", async (req, res) => {
   try {
     const { propertyId, requesterName, requesterEmail, offerAmount, message } = req.body;
@@ -42,8 +47,8 @@ router.post("/", async (req, res) => {
     const property = await Property.findById(propertyId);
     if (!property) return res.status(404).json({ message: "Property not found" });
 
-    if (property.status === "Sold" || property.status === "Rented") {
-      return res.status(400).json({ message: "This property is no longer available" });
+    if (!canReceiveNewRequests(property.status)) {
+      return res.status(400).json({ message: "This property is currently unavailable for new proposals" });
     }
 
     const newRequest = new Request({
@@ -99,24 +104,48 @@ router.put("/:id", async (req, res) => {
     await request.save();
 
     if (status === "Accepted" || status === "accepted") {
+      const previousState = {
+        _id: request.propertyId._id,
+        title: request.propertyId.title,
+        price: request.propertyId.price,
+        status: request.propertyId.status,
+      };
       request.propertyId.status = "Under Offer";
       await request.propertyId.save();
+      await notifySubscribersOnPropertyChange(previousState, request.propertyId);
     }
 
     if (status === "Completed") {
+      const previousState = {
+        _id: request.propertyId._id,
+        title: request.propertyId.title,
+        price: request.propertyId.price,
+        status: request.propertyId.status,
+      };
       request.propertyId.status = request.propertyId.propertyType === "Sale" ? "Sold" : "Rented";
       await request.propertyId.save();
+      await notifySubscribersOnPropertyChange(previousState, request.propertyId);
+      await cancelPendingRequestsForProperty(request.propertyId._id);
     }
 
     if (status === "Rejected" || status === "rejected" || status === "Cancelled") {
       if (request.propertyId.status === "Under Offer") {
+        const previousState = {
+          _id: request.propertyId._id,
+          title: request.propertyId.title,
+          price: request.propertyId.price,
+          status: request.propertyId.status,
+        };
         request.propertyId.status = "Available";
         await request.propertyId.save();
+        await notifySubscribersOnPropertyChange(previousState, request.propertyId);
       }
     }
 
     if (status === "Accepted" || status === "accepted" || status === "Rejected" || status === "rejected") {
+
       // Send decision update mail only on accept/reject.
+      
       await sendRequestStatusEmail({
         to: request.requesterEmail || request.buyer?.email,
         requesterName: request.requesterName || request.buyer?.name,

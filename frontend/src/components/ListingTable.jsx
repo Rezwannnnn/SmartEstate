@@ -29,9 +29,22 @@ const getLocationLabel = (location) => {
   );
 };
 
+const toStatusOptionValue = (status) => {
+  if (status === "Sold" || status === "Rented") {
+    return "Sold/Rented";
+  }
+  if (status === "Under Offer") {
+    return "Under Offer";
+  }
+  return "Available";
+};
+
 export default function ListingTable({
   properties = [],
   onAddNew,
+  canUpdateStatus = false,
+  statusUpdatingId = "",
+  onStatusChange,
   canDelete = false,
   deletingId = "",
   onDelete,
@@ -98,7 +111,33 @@ export default function ListingTable({
                   {getLocationLabel(property.location)}
                 </td>
                 <td style={cellStyle}>৳ {property.price?.toLocaleString()}</td>
-                <td style={cellStyle}>{property.status}</td>
+                <td style={cellStyle}>
+                  {canUpdateStatus && typeof onStatusChange === "function" ? (
+                    <select
+                      value={toStatusOptionValue(property.status)}
+                      onChange={(e) => onStatusChange(property, e.target.value)}
+                      disabled={statusUpdatingId === property._id}
+                      style={{
+                        width: 150,
+                        height: 34,
+                        borderRadius: 8,
+                        border: "1px solid #cbd5e1",
+                        background: "#fff",
+                        color: "#1e293b",
+                        padding: "0 10px",
+                        cursor:
+                          statusUpdatingId === property._id ? "not-allowed" : "pointer",
+                        opacity: statusUpdatingId === property._id ? 0.75 : 1,
+                      }}
+                    >
+                      <option value="Available">Available</option>
+                      <option value="Under Offer">Under Offer</option>
+                      <option value="Sold/Rented">Sold/Rented</option>
+                    </select>
+                  ) : (
+                    property.status
+                  )}
+                </td>
                 <td style={cellStyle}>{property.bedrooms}</td>
                 <td style={cellStyle}>{property.bathrooms}</td>
                 <td style={cellStyle}>{property.size} sqft</td>

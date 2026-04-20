@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getPropertyById } from "../services/propertyService";
+import {
+  getPropertyById,
+  subscribeToPropertyAlerts,
+  unsubscribeFromPropertyAlerts,
+} from "../services/propertyService";
 import { createRequest } from "../services/requestService";
 import PropertyLocationMap from "../components/PropertyLocationMap";
 
@@ -16,12 +20,15 @@ export default function PropertyDetails() {
     message: "",
   });
   const [feedback, setFeedback] = useState("");
+  const [subscriptionFeedback, setSubscriptionFeedback] = useState("");
+  const [alertActionLoading, setAlertActionLoading] = useState(false);
+  const [showUnsubscribeButton, setShowUnsubscribeButton] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
         const res = await getPropertyById(id);
-        // Handle both develop response (res.data) and my mock response (res.data.property)
+
         const propData = res.data?.property || res.data;
         if (propData) setProperty(propData);
       } catch (err) {
@@ -74,6 +81,58 @@ export default function PropertyDetails() {
     }
   };
 
+  const handleSubscribeAlerts = async () => {
+    setSubscriptionFeedback("");
+    const email = (localStorage.getItem("userEmail") || "").trim();
+
+    if (!email) {
+      setSubscriptionFeedback("Please log in to subscribe for alerts.");
+      return;
+    }
+
+    try {
+      setAlertActionLoading(true);
+      const res = await subscribeToPropertyAlerts(id, email);
+      setSubscriptionFeedback(
+        res.data?.message ||
+          "Subscribed. You will receive email alerts for changes.",
+      );
+      setShowUnsubscribeButton(true);
+    } catch (error) {
+      setSubscriptionFeedback(
+        error.response?.data?.message || "Failed to subscribe for alerts.",
+      );
+    } finally {
+      setAlertActionLoading(false);
+    }
+  };
+
+  const handleUnsubscribeAlerts = async () => {
+    setSubscriptionFeedback("");
+    const email = (localStorage.getItem("userEmail") || "").trim();
+
+    if (!email) {
+      setSubscriptionFeedback("Please log in to manage alert subscriptions.");
+      return;
+    }
+
+    try {
+      setAlertActionLoading(true);
+      const res = await unsubscribeFromPropertyAlerts(id, email);
+      setSubscriptionFeedback(
+        res.data?.message ||
+          "Unsubscribed. You will no longer receive alerts for this property.",
+      );
+      setShowUnsubscribeButton(false);
+    } catch (error) {
+      setSubscriptionFeedback(
+        error.response?.data?.message || "Failed to unsubscribe from alerts.",
+      );
+    } finally {
+      setAlertActionLoading(false);
+    }
+  };
+
   if (loading) return (
     <main style={{ padding: "100px 40px", textAlign: "center", fontFamily: "'DM Sans', sans-serif" }}>
       <p style={{ fontSize: 18, color: "#64748b" }}>Loading property details...</p>
@@ -87,7 +146,8 @@ export default function PropertyDetails() {
     </main>
   );
 
-  const isAvailable = !property.status || property.status.toLowerCase() === 'available';
+  const normalizedStatus = String(property.status || '').toLowerCase();
+  const canSubmitProposal = normalizedStatus !== 'sold';
   const displayImage = selectedImage || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop";
   const galleryImages = [
     ...(Array.isArray(property.images) ? property.images.filter(Boolean) : []),
@@ -193,9 +253,41 @@ export default function PropertyDetails() {
 
           <aside>
             <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 24, padding: 32, position: "sticky", top: 120, boxShadow: "0 10px 30px rgba(15,23,42,0.04)" }}>
+              <div style={{ marginBottom: 26, paddingBottom: 20, borderBottom: "1px solid #f1f5f9" }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 10 }}>Price Alerts</h2>
+                <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.6, margin: "0 0 12px" }}>
+                  Subscribe to get email updates when this price changes or when this property becomes Sold/Rented.
+                </p>
+                {!showUnsubscribeButton && (
+                  <button
+                    type="button"
+                    onClick={handleSubscribeAlerts}
+                    disabled={alertActionLoading}
+                    style={{ width: "100%", height: 44, background: "#1d4ed8", color: "#fff", border: "none", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: alertActionLoading ? "not-allowed" : "pointer", opacity: alertActionLoading ? 0.75 : 1 }}
+                  >
+                    {alertActionLoading ? "Please wait..." : "Subscribe to Price Alerts"}
+                  </button>
+                )}
+                {showUnsubscribeButton && (
+                  <button
+                    type="button"
+                    onClick={handleUnsubscribeAlerts}
+                    disabled={alertActionLoading}
+                    style={{ width: "100%", height: 42, marginTop: 10, background: "#fff", color: "#1e293b", border: "1px solid #cbd5e1", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: alertActionLoading ? "not-allowed" : "pointer", opacity: alertActionLoading ? 0.75 : 1 }}
+                  >
+                    Unsubscribe Alerts
+                  </button>
+                )}
+                {subscriptionFeedback && (
+                  <p style={{ marginTop: 10, color: subscriptionFeedback.toLowerCase().includes("fail") ? "#991b1b" : "#166534", fontWeight: 600, fontSize: 13 }}>
+                    {subscriptionFeedback}
+                  </p>
+                )}
+              </div>
+
               <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>Interest Inquiry</h2>
 
-              {!isAvailable ? (
+              {!canSubmitProposal ? (
                 <div style={{ background: "#fee2e2", color: "#991b1b", padding: 20, borderRadius: 12, textAlign: "center", fontWeight: 700 }}>
                   This property is already {property.status.toUpperCase()}
                 </div>

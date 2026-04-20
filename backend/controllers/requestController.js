@@ -1,6 +1,7 @@
 const Request = require('../models/requestModel');
 const Property = require('../models/propertyModel');
 const { sendRequestStatusEmail } = require('../services/emailService');
+const { canReceiveNewRequests } = require('../services/requestLifecycleService');
 
 exports.getPropertyById = async (req, res) => {
     try {
@@ -22,6 +23,10 @@ exports.sendBuyRequest = async (req, res) => {
 
         const property = await Property.findById(propertyId);
         if (!property) return res.status(404).json({ success: false, message: 'Property not found' });
+
+        if (!canReceiveNewRequests(property.status)) {
+            return res.status(400).json({ success: false, message: 'This property is currently unavailable for new proposals' });
+        }
 
         const request = await Request.create({
             property: propertyId,

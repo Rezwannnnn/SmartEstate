@@ -15,6 +15,12 @@ export const filterProperties = async (filters = {}) => {
 export const getPropertyById = (id) =>
     apiClient.get(`/api/properties/${id}`);
 
+export const subscribeToPropertyAlerts = (propertyId, email) =>
+    apiClient.post(`/api/properties/${propertyId}/alerts/subscribe`, { email });
+
+export const unsubscribeFromPropertyAlerts = (propertyId, email) =>
+    apiClient.post(`/api/properties/${propertyId}/alerts/unsubscribe`, { email });
+
 export const sendBuyRequest = async (payload) => {
     return apiClient.post('/api/requests', {
         propertyId: payload.propertyId,
@@ -58,6 +64,9 @@ export const getAllProperties = (params = {}) =>
 
 export const createProperty = (payload) =>
     apiClient.post("/api/properties", payload);
+
+export const updateProperty = (propertyId, payload) =>
+    apiClient.put(`/api/properties/${propertyId}`, payload);
 
 export const deleteProperty = (propertyId) =>
     apiClient.delete(`/api/properties/${propertyId}`);

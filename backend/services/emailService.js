@@ -77,6 +77,69 @@ const sendRequestStatusEmail = async ({
   }
 };
 
+const sendPropertyAlertEmail = async ({
+  to,
+  propertyTitle,
+  oldPrice,
+  newPrice,
+  oldStatus,
+  newStatus,
+}) => {
+  if (!to) {
+    return false;
+  }
+
+  const priceChanged = Number(oldPrice) !== Number(newPrice);
+  const statusChangedToFinal =
+    String(oldStatus || '') !== String(newStatus || '') &&
+    (newStatus === 'Sold' || newStatus === 'Rented');
+
+  if (!priceChanged && !statusChangedToFinal) {
+    return false;
+  }
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    return false;
+  }
+
+  const updates = [];
+  if (priceChanged) {
+    updates.push(`Price changed from $${Number(oldPrice || 0).toLocaleString()} to $${Number(newPrice || 0).toLocaleString()}.`);
+  }
+  if (statusChangedToFinal) {
+    updates.push(`Property status changed from ${oldStatus || 'Unknown'} to ${newStatus}.`);
+  }
+
+  const safeTitle = propertyTitle || 'your subscribed property';
+  const subject = `SmartEstate Alert: Update on ${safeTitle}`;
+  const text = [
+    'Hello,',
+    '',
+    `There is an update for ${safeTitle}:`,
+    ...updates,
+    '',
+    'Please sign in to SmartEstate for details.',
+    '',
+    'Thank you,',
+    'SmartEstate Team',
+  ].join('\n');
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to,
+      subject,
+      text,
+    });
+    return true;
+  } catch (error) {
+    console.error('Property alert email failed:', error.message);
+    return false;
+  }
+};
+
 module.exports = {
   sendRequestStatusEmail,
+  sendPropertyAlertEmail,
 };

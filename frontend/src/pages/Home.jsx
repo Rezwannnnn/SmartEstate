@@ -219,8 +219,8 @@ function BigPropertyCard({ property }) {
             <Link to={`/property/${property._id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, background: "#fff", color: "#0f172a", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, padding: "8px 16px", borderRadius: 33, border: "none", cursor: "pointer" }}>
               View Details <span>→</span>
             </Link>
-            {property.status && property.status !== 'available' ? (
-              <span style={{ display: "flex", alignItems: "center", gap: 6, background: property.status === 'rented' ? "#f59e0b" : "#ef4444", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 30 }}>
+            {String(property.status || '').toLowerCase() === 'sold' ? (
+              <span style={{ display: "flex", alignItems: "center", gap: 6, background: "#ef4444", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 30 }}>
                 {property.status.toUpperCase()}
               </span>
             ) : (
@@ -270,8 +270,8 @@ function SmallPropertyCard({ property }) {
           <Link to={`/property/${property._id}`} style={{ fontSize: 12, fontWeight: 600, color: "#94a3b8", border: "1px solid #94a3b8", padding: "8px 16px", borderRadius: 33, cursor: "pointer" , textDecoration: "none", display: "inline-block", marginTop: 6 }}>View Details</Link>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {property.status && property.status !== 'available' ? (
-            <span style={{ padding: "4px 12px", borderRadius: "16px", background: property.status === 'rented' ? "#f59e0b" : "#ef4444", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 700 }}>
+          {String(property.status || '').toLowerCase() === 'sold' ? (
+            <span style={{ padding: "4px 12px", borderRadius: "16px", background: "#ef4444", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif", fontSize: 10, fontWeight: 700 }}>
               {property.status.toUpperCase()}
             </span>
           ) : (
